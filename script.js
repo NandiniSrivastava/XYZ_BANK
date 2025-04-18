@@ -1,11 +1,10 @@
-const API_URL = 'https://1degu0wnr1.execute-api.ap-south-1.amazonaws.com/prod';
-// DOM Loaded
+const apiUrl = "https://jq249kyhp3.execute-api.ap-south-1.amazonaws.com/prod/submit";
+
 document.addEventListener('DOMContentLoaded', loadTransactions);
 
-// Form Submission
 document.getElementById("transactionForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    
+
     const transaction = {
         accNumber: document.getElementById("accNumber").value,
         amount: document.getElementById("amount").value,
@@ -18,20 +17,22 @@ document.getElementById("transactionForm").addEventListener("submit", async (e) 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(transaction)
         });
-        
+
         if (response.ok) {
             clearForm();
             loadTransactions();
+        } else {
+            console.error("POST failed");
         }
     } catch (error) {
         console.error('Error:', error);
     }
 });
 
-// Load Transactions
 async function loadTransactions() {
     try {
         const response = await fetch(`${API_URL}/transactions`);
+        if (!response.ok) throw new Error('Failed to fetch');
         const transactions = await response.json();
         renderTransactions(transactions);
     } catch (error) {
@@ -39,7 +40,6 @@ async function loadTransactions() {
     }
 }
 
-// Delete Transaction
 async function deleteTransaction(id) {
     try {
         const response = await fetch(`${API_URL}/transactions`, {
@@ -47,14 +47,14 @@ async function deleteTransaction(id) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: id.toString() })
         });
-        
+
         if (response.ok) loadTransactions();
+        else console.error("DELETE failed");
     } catch (error) {
         console.error('Error:', error);
     }
 }
 
-// Render Transactions (updated)
 function renderTransactions(transactions) {
     const tbody = document.getElementById("transactionTableBody");
     tbody.innerHTML = transactions.map(transaction => `
