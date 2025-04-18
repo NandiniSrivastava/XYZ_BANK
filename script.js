@@ -1,52 +1,64 @@
-document.getElementById("transactionForm").addEventListener("submit", function (e) {
+const API_URL = 'https://your-api-gateway-url.amazonaws.com/prod';
+
+// Update form submission
+document.getElementById("transactionForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const accNumber = document.getElementById("accNumber").value;
     const amount = document.getElementById("amount").value;
     const type = document.getElementById("type").value;
 
-    addTransaction(accNumber, amount, type);
-    clearForm();
+    try {
+        const response = await fetch(`${API_URL}/transactions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                accNumber: accNumber,
+                amount: amount,
+                type: type
+            })
+        });
+        
+        if (response.ok) {
+            clearForm();
+            loadTransactions();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 });
 
-let transactions = [];
+// Load transactions on page load
+document.addEventListener('DOMContentLoaded', loadTransactions);
 
-function addTransaction(accNumber, amount, type) {
-    const transaction = {
-        id: Date.now(),
-        accNumber: accNumber,
-        amount: amount,
-        type: type
-    };
-    transactions.push(transaction);
-    renderTransactions();
+async function loadTransactions() {
+    try {
+        const response = await fetch(`${API_URL}/transactions`);
+        transactions = await response.json();
+        renderTransactions();
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
 
-function deleteTransaction(id) {
-    transactions = transactions.filter(transaction => transaction.id !== id);
-    renderTransactions();
+async function deleteTransaction(id) {
+    try {
+        const response = await fetch(`${API_URL}/transactions`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: id.toString() })
+        });
+        
+        if (response.ok) {
+            loadTransactions();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
 
-function renderTransactions() {
-    const tbody = document.getElementById("transactionTableBody");
-    tbody.innerHTML = "";
-
-    transactions.forEach(transaction => {
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-            <td>${transaction.accNumber}</td>
-            <td>${transaction.amount}</td>
-            <td>${transaction.type}</td>
-            <td><span class="delete-btn" onclick="deleteTransaction(${transaction.id})">Delete</span></td>
-        `;
-
-        tbody.appendChild(row);
-    });
-}
-
-function clearForm() {
-    document.getElementById("accNumber").value = "";
-    document.getElementById("amount").value = "";
-    document.getElementById("type").value = "Deposit";
-}
+// Keep the existing renderTransactions and clearForm functions
